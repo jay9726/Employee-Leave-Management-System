@@ -1,10 +1,12 @@
-﻿namespace ELMS.Application.DTOS.LeaveRequestDTO
+﻿using ELMS.Domain.Enum;
+
+namespace ELMS.Application.DTOS.LeaveRequestDTO
 {
     public class GetLeaveRequestDTO
     {
-        public int LeaveRequestId { get; set; }
-        public int? ApplicationId { get; set; }
-        public int? DepartmentId { get; set; }
+        public string LeaveRequestId { get; set; }
+        public string? ApplicationId { get; set; }
+        public string? DepartmentId { get; set; }
 
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }

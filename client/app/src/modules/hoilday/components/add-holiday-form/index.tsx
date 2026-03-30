@@ -4,14 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { holidaySchema, type holidayFormDataPayload } from '../../schemas/holidaySchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { holidayDefaultValues } from '../../schemas/holidayDefaultValues';
-import { useMutation } from '@tanstack/react-query';
-import { addCompanyHolidayAPI } from '@/services/companyholiday';
 import InputComponent from '@/components/input-component';
 import Icon from '@/components/icon';
+import { useAddCompanyHoliday } from '../../apis/mutation';
+import { useToast } from '@/hooks/toast';
 
 const AddHolidayForm: React.FC = () => {
 
     const navigate = useNavigate();
+    const toast = useToast();
+
 
     const { control, handleSubmit, setValue, formState: { errors } } = useForm<holidayFormDataPayload>({
         resolver: zodResolver(holidaySchema),
@@ -29,18 +31,18 @@ const AddHolidayForm: React.FC = () => {
         setValue("day", days[date.getDay()]);
     };
 
-    const addHolidayMutation = useMutation({
-        mutationFn: addCompanyHolidayAPI,
-        onSuccess: (res) => {
-            if (res.status === 201) {
-                navigate("/home/holiday");
-            }
-        },
-    });
-
+    const { mutate, isPending } = useAddCompanyHoliday();
     const onSubmit = (data: holidayFormDataPayload) => {
         data.date.toISOString(),
-            addHolidayMutation.mutate(data);
+            mutate(data, {
+                onSuccess: () => {
+                    navigate("/admin/holidays");
+                    toast.success('Holiday added successfully');
+                },
+                onError: () => {
+                    toast.error('Failed to add holiday');
+                },
+            });
     };
 
     return (
@@ -129,7 +131,7 @@ const AddHolidayForm: React.FC = () => {
                     type="submit"
                     className="w-full bg-linear-to-r from-blue-500 to-purple-600 text-white py-2 rounded-md hover:opacity-90 transition"
                 >
-                    Add Holiday
+                    {isPending ? 'Adding Holiday...' : 'Add Holiday'}
                 </button>
             </div>
         </form>

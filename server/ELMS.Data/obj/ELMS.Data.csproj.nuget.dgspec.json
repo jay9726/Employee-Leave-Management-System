@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Converge Sol\\Project\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj": {}
+    "D:\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj": {}
   },
   "projects": {
-    "D:\\Converge Sol\\Project\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj": {
+    "D:\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Converge Sol\\Project\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj",
+        "projectUniqueName": "D:\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj",
         "projectName": "ELMS.Data",
-        "projectPath": "D:\\Converge Sol\\Project\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj",
+        "projectPath": "D:\\ELMS\\server\\ELMS.Data\\ELMS.Data.csproj",
         "packagesPath": "C:\\Users\\Jay Moteriya\\.nuget\\packages\\",
-        "outputPath": "D:\\Converge Sol\\Project\\ELMS\\server\\ELMS.Data\\obj\\",
+        "outputPath": "D:\\ELMS\\server\\ELMS.Data\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net10.0": {
@@ -81,7 +81,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

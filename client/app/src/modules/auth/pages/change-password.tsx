@@ -1,19 +1,8 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import Icon from '@/components/icon';
 import ChangePasswordForm from '../components/change-password-form';
-import { authHook } from '@/store/authStore';
-import { useNavigate } from 'react-router-dom';
 
 const ChangePassword: React.FC = () => {
-
-  const { user } = authHook();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user || user.role === 'Admin') {
-      navigate(-1)
-    }
-  },[user, navigate])
 
   return (
     <div className="w-full h-full flex justify-center items-center">

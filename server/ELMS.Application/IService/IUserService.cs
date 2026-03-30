@@ -1,6 +1,5 @@
 ﻿using ELMS.Application.DTOS.APIResponse;
 using ELMS.Application.DTOS.UserDTO;
-using ELMS.Data.Entity;
 
 namespace ELMS.Application.IService
 {
@@ -8,8 +7,8 @@ namespace ELMS.Application.IService
     {
         Task<APIResponseDTO<int>> GetEmployeeCountAsync();
         Task<IEnumerable<GetUserDTO?>> GetAllUserAsync();
-        Task<List<GetUserDTO>?> GetByIdAsync(int id);
+        Task<List<GetUserDTO>?> GetByIdAsync(Guid id);
         Task<GetUserDTO?> UpdateAppUserAsycn(UpdateUserDTO updateUserDTO);
-        Task<GetUserDTO?> DeleteUserAsync(int id);
+        Task<GetUserDTO?> DeleteUserAsync(Guid id);
     }
 }

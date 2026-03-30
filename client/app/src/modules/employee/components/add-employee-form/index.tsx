@@ -2,14 +2,13 @@ import Icon from '@/components/icon';
 import InputComponent from '@/components/input-component';
 import Loader from '@/components/loader';
 import { useToast } from '@/hooks/toast';
+import { useRegister } from '@/modules/auth/apis/mutation';
 import { registerDefaultValues } from '@/modules/auth/schemas/authDefaultValues';
 import { registerSchema, type RegisterSchemaPayload } from '@/modules/auth/schemas/authSchema';
+import { useGetOnlyDepartment } from '@/modules/department/apis/queries';
 import { setDepartments } from '@/redux/slice/departmentSlice';
-import { registerAPI } from '@/services/authService';
-import { getOnlyDepartmentAPI } from '@/services/departmentService';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -18,56 +17,39 @@ const AddEmployeeFrom: React.FC = () => {
 
     const toast = useToast();
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-
-    useQuery({
-        queryKey: ['departments'],
-        queryFn: () => getOnlyDepartmentAPI()
-            .then((res) => {
-                dispatch(setDepartments(res.data.data))
-                return res.data.data
-            })
-    })
-
-    const departments = useSelector((state: any) => state.department.department);
 
     const { handleSubmit, control, formState: { errors } } = useForm({
         resolver: zodResolver(registerSchema),
         defaultValues: registerDefaultValues
     })
+    const dispatch = useDispatch();
 
+    const { data, isPending } = useGetOnlyDepartment();
+    useEffect(() => {
+        if (data?.data) {
+            dispatch(setDepartments(data?.data))
+        }
+    }, [data])
 
-    const registerMutation = useMutation({
-        mutationFn: registerAPI,
-        onSuccess: (data) => {
-            if (data.status === 200) {
+    const { mutate, isPending: isDepartmentPending } = useRegister();
+
+    
+    const onSubmit = async (data: RegisterSchemaPayload) => {
+        mutate(data, {
+            onSuccess: () => {
                 toast.success("Employee Created Successfully");
-                navigate('/home/employee');
-            } else {
+                navigate('/admin/employee');
+            },
+            onError: (error) => {
                 toast.error("Employee Creation Failed Please Try Again.");
-            }
-        },
-        onError: (error) => {
-            if (error instanceof Error) {
                 toast.error(error.message);
             }
-            console.log(error);
-        }
-    })
-
-
-    const onSubmit = async (data: RegisterSchemaPayload) => {
-        debugger
-        try {
-            registerMutation.mutate(data);
-        } catch (error) {
-            console.log(error);
-        }
+        });
     }
-
+    {isPending && <Loader />}
+    console.log(data?.data);
     return (
         <>
-            {registerMutation.isPending && <Loader />}
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col gap-2">
@@ -169,15 +151,14 @@ const AddEmployeeFrom: React.FC = () => {
                                             <select
                                                 {...field}
                                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
-                                                onChange={(e) => field.onChange(Number(e.target.value))}
                                             >
                                                 <option value={0}>Select Department</option>
                                                 {
-                                                    departments.map((department: any, index: number) => {
+                                                    data?.data.map((department: any, index: number) => {
                                                         return (
                                                             <option
                                                                 key={index}
-                                                                value={department.id}
+                                                                value={department.departmentId}
                                                             >
                                                                 {department.departmentName}
                                                             </option>
@@ -203,7 +184,7 @@ const AddEmployeeFrom: React.FC = () => {
                     <button
                         className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                        {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                        {isDepartmentPending ? "Creating Account..." : "Create Account"}
                         <Icon name="ArrowRight" width={20} height={20} />
                     </button>
                 </div>

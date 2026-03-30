@@ -10,7 +10,7 @@ namespace ELMS.Application.DTOS.AuthDTO.RequestDTO
 
         public string? Password { get; set; }
 
-        public int? DepartmentId { get; set; }
+        public string? DepartmentId { get; set; }
 
         public IFormFile? ImagePath { get; set; }
 

@@ -1,20 +1,21 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { holidaySchema, type holidayFormDataPayload } from '../../schemas/holidaySchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { holidayDefaultValues } from '../../schemas/holidayDefaultValues';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { getCompanyHolidayByIdAPI, updateCompanyHolidayAPI } from '@/services/companyholiday';
 import Loader from '@/components/loader';
 import InputComponent from '@/components/input-component';
 import Icon from '@/components/icon';
+import { useGetCompanyHolidayById } from '../../apis/queries';
+import { useUpdateCompanyHoliday } from '../../apis/mutation';
+import { useToast } from '@/hooks/toast';
 
 const UpdateHolidayForm: React.FC = () => {
 
     const { id } = useParams();
     const navigate = useNavigate();
-
+    const toast = useToast();
 
     const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<holidayFormDataPayload>({
         resolver: zodResolver(holidaySchema),
@@ -33,36 +34,33 @@ const UpdateHolidayForm: React.FC = () => {
     };
 
 
+    const { data, isPending } = useGetCompanyHolidayById(id as string);
+    useEffect(() => {
+        if (data?.data) {
+            reset(data.data);
+        }
+    }, [data])
 
-    const { isPending } = useQuery({
-        queryKey: ['holidays', id],
-        queryFn: () => getCompanyHolidayByIdAPI(Number(id))
-            .then((res) => {
-                reset(res.data.data);
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    })
+    { isPending && <Loader /> }
 
-    const updateHolidayMutation = useMutation({
-        mutationFn: (data: any) => updateCompanyHolidayAPI(Number(id), data),
-        onSuccess: (data) => {
-            if (data.status === 200) {
-                navigate("/home/holiday");
-            }
-        },
-    })
+    const { mutate, isPending: isUpdatePending } = useUpdateCompanyHoliday();
 
     const onSubmit = (data: holidayFormDataPayload) => {
         data.date.toISOString(),
-            updateHolidayMutation.mutate(data);
+            mutate({ companyHolidayId: id as string, data }, {
+                onSuccess: () => {
+                    navigate("/admin/holidays");
+                    toast.success('Holiday updated successfully');
+                },
+                onError: () => {
+                    toast.error('Failed to update holiday');
+                },
+            });
     };
 
 
     return (
         <>
-            {isPending && <Loader />}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
                     <label className="block text-sm font-medium mb-1">
@@ -148,7 +146,7 @@ const UpdateHolidayForm: React.FC = () => {
                     type="submit"
                     className="w-full bg-linear-to-r from-blue-500 to-purple-600 text-white py-2 rounded-md hover:opacity-90 transition"
                 >
-                    Update Holiday
+                    {isUpdatePending ? 'Updating Holiday...' : 'Update Holiday'}
                 </button>
             </form>
         </>

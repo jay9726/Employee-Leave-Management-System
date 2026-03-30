@@ -1,10 +1,8 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/navbar";
-import Slider from "@/components/slider";
+import Slider from "@/components/admin-slider";
 
 const DepartmentLayout = () => {
-
-
 
   return (
     <>

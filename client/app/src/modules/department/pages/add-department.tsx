@@ -1,20 +1,7 @@
-import { authHook } from "@/store/authStore";
 import Icon from "../../../components/icon";
 import AddDepartmentForm from "../components/add-department-form";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 const AddDepartment = () => {
-
-    const { user } = authHook();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!user || user.role !== "Admin") {
-            navigate(-1);
-        }
-    }, [user])
-
     return (
         <div className="w-full flex justify-center max-h-screen">
             <div className="w-full max-w-md my-4">

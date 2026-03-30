@@ -1,19 +1,19 @@
-import axios from "axios";
+// import { api } from "@/lib/api";
 
-const USER_BASE_URL = import.meta.env.VITE_USER_API_URL;
 
-export const getEmployeeCountAPI = async () => await axios.get(`${USER_BASE_URL}/userCount`);
 
-export const getAllUsersAPI = async () => await axios.get(`${USER_BASE_URL}`);
+// export const getEmployeeCountAPI = async () => await api.get(`/User/userCount`);
 
-export const getUserByIdAPI = async (id: number) => await axios.get(`${USER_BASE_URL}/${id}`);
+// export const getAllUsersAPI = async () => await api.get(`/User`);
 
-export const addUserAPI = async (id: number, data: any) => await axios.post(`${USER_BASE_URL}/${id}`, data);
+// export const getUserByIdAPI = async (id: number) => await api.get(`/User/${id}`);
 
-export const updateUserAPI = async (data: any) => await axios.post(`${USER_BASE_URL}`, data, {
-    headers: {
-        "Content-Type": "multipart/form-data",
-    },
-});
+// export const addUserAPI = async (id: number, data: any) => await api.post(`/User/${id}`, data);
 
-export const deleteUserAPI = async (id: number) => await axios.delete(`${USER_BASE_URL}/${id}`);    
+// export const updateUserAPI = async (data: any) => await api.post(`/User`, data, {
+//     headers: {
+//         "Content-Type": "multipart/form-data",
+//     },
+// });
+
+// export const deleteUserAPI = async (id: number) => await api.delete(`/User/${id}`);    

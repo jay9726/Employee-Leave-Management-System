@@ -1,10 +1,10 @@
 import Icon from '@/components/icon'
 import { formatDate } from '@/constant/constant';
-import { deleteCompanyHolidayAPI } from '@/services/companyholiday';
-import { useMutation } from '@tanstack/react-query';
 import { Calendar, CalendarDays, MapPin } from 'lucide-react';
 import React from 'react'
 import { NavLink } from 'react-router-dom'
+import { useDeleteCompanyHoliday } from '../../apis/mutation';
+import { useToast } from '@/hooks/toast';
 
 
 interface EmployeeListTableProps {
@@ -13,18 +13,21 @@ interface EmployeeListTableProps {
 }
 
 
-const EmployeeListTable: React.FC<EmployeeListTableProps> = ({ filteredHolidays, user }) => {
+const EmployeeListTable: React.FC<EmployeeListTableProps> = ({ filteredHolidays }) => {
+    console.log(filteredHolidays)
+    const toast = useToast();
+    const { mutate, isPending } = useDeleteCompanyHoliday();
 
-    const deleteholidaymutation = useMutation({
-        mutationFn: (id: number) => deleteCompanyHolidayAPI(id)
-            .then(() => {
-                window.location.reload();
-            })
-    })
-
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this holiday?')) {
-            deleteholidaymutation.mutate(id);
+            mutate(id, {
+                onSuccess: () => {
+                    toast.success('Holiday deleted successfully');
+                },
+                onError: () => {
+                    toast.error('Failed to delete holiday');
+                },
+            });
         }
     };
 
@@ -57,15 +60,15 @@ const EmployeeListTable: React.FC<EmployeeListTableProps> = ({ filteredHolidays,
                                 Type
                             </div>
                         </th>
-                        {
-                            user?.role === 'Admin' && (
-                                <th className="px-6 py-4 text-center">
-                                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-700">
-                                        Actions
-                                    </div>
-                                </th>
-                            )
-                        }
+                        {/* {
+                            user?.role === 'Admin' && ( */}
+                        <th className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-700">
+                                Actions
+                            </div>
+                        </th>
+                        {/* ) */}
+                        {/* } */}
                     </tr>
                 </thead>
 
@@ -111,26 +114,24 @@ const EmployeeListTable: React.FC<EmployeeListTableProps> = ({ filteredHolidays,
                                         {holiday.holidayType}
                                     </span>
                                 </td>
-                                {
-                                    user?.role === 'Admin' && (
-                                        <td>
-                                            <div className="flex items-center justify-center  py-2 gap-2">
-                                                <NavLink
-                                                    to={`/home/holiday/update/${holiday.id}`}
-                                                    className="bg-blue-200 px-2 py-2 rounded-lg"
-                                                >
-                                                    <Icon name="EditBadge" width={18} height={18} stroke='blue' />
-                                                </NavLink>
+                                <td>
+                                    <div className="flex items-center justify-center  py-2 gap-2">
+                                        <NavLink
+                                            to={`/admin/holidays/update/${holiday.companyHolidayId}`}
+                                            className="bg-blue-200 px-2 py-2 rounded-lg"
+                                        >
+                                            <Icon name="EditBadge" width={18} height={18} stroke='blue' />
+                                        </NavLink>
 
-                                                <button
-                                                    onClick={() => handleDelete(holiday.id)}
-                                                    className="bg-red-200 px-2 py-2 rounded-lg"
-                                                >
-                                                    <Icon name="Trash" width={18} height={18} stroke='red' />
-                                                </button>
-                                            </div>
-                                        </td>)
-                                }
+                                        <button
+                                            disabled={isPending}
+                                            onClick={() => handleDelete(holiday.companyHolidayId)}
+                                            className="bg-red-200 px-2 py-2 rounded-lg"
+                                        >
+                                            <Icon name="Trash" width={18} height={18} stroke='red' />
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         ))
                     )}

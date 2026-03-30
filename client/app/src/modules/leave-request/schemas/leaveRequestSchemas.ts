@@ -4,7 +4,7 @@ export const leaveRequestSchema = z.object({
   reason: z.string().min(2, "Reason is required"),
   fromDate: z.string().min(1, "From date is required"),
   toDate: z.string().min(1, "To date is required"),
-  applicantId: z.number().optional(),
+  employeeId: z.number().optional(),
   LeaveType: z.string().min(1, "Leave type is required"),
   departmentId: z.number().optional()
 }).refine(

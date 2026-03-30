@@ -1,19 +1,7 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import AddEmployeeFrom from '../components/add-employee-form'
-import { authHook } from '@/store/authStore';
-import { useNavigate } from 'react-router-dom';
 
 const AddEmployee: React.FC = () => {
-
-    const { user } = authHook();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!user || user.role !== 'Admin') {
-            navigate(-1);
-        }
-    }, [user])
-
     return (
         <div className="w-full h-full flex ">
             <div className='w-full h-157'>

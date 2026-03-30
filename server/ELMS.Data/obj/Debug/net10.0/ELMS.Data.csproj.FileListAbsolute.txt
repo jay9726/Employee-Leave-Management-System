@@ -12,3 +12,17 @@ D:\Converge Sol\Project\ELMS\server\ELMS.Data\obj\Debug\net10.0\refint\ELMS.Data
 D:\Converge Sol\Project\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.pdb
 D:\Converge Sol\Project\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.genruntimeconfig.cache
 D:\Converge Sol\Project\ELMS\server\ELMS.Data\obj\Debug\net10.0\ref\ELMS.Data.dll
+D:\ELMS\server\ELMS.Data\bin\Debug\net10.0\ELMS.Data.deps.json
+D:\ELMS\server\ELMS.Data\bin\Debug\net10.0\ELMS.Data.runtimeconfig.json
+D:\ELMS\server\ELMS.Data\bin\Debug\net10.0\ELMS.Data.dll
+D:\ELMS\server\ELMS.Data\bin\Debug\net10.0\ELMS.Data.pdb
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.csproj.AssemblyReference.cache
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.GeneratedMSBuildEditorConfig.editorconfig
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.AssemblyInfoInputs.cache
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.AssemblyInfo.cs
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.csproj.CoreCompileInputs.cache
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.dll
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\refint\ELMS.Data.dll
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.pdb
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ELMS.Data.genruntimeconfig.cache
+D:\ELMS\server\ELMS.Data\obj\Debug\net10.0\ref\ELMS.Data.dll

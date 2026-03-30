@@ -1,18 +1,6 @@
-import { useEffect } from "react";
 import UpdateHolidayForm from "../components/update-holiday-form";
-import { useNavigate } from "react-router-dom";
-import { authHook } from "@/store/authStore";
-
 
 const UpdateHoliday = () => {
-
-  const { user } = authHook();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    user ? user.role !== 'Admin' ? navigate(-1) : !user : navigate(-1)
-  }, [])
-
   return (
       <div className="w-full h-full flex justify-between">
         <div className="flex w-full h-full bg-linear-to-br from-blue-400 via-blue-400 to-purple-400 items-center justify-center p-12">

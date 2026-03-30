@@ -21,7 +21,7 @@ export const registerSchema = z.object({
   FullName: z.string().min(3),
   Email: z.email(),
   Password: passwordSchema.optional(),
-  DepartmentId: z.number().min(1, "Minimum one department is required"),
+  DepartmentId: z.string().min(1, "Minimum one department is required"),
 });
 
 
@@ -52,15 +52,15 @@ export const updateProfileSchema = z.object({
       "Only JPG, PNG images allowed"
     )
     .optional(),
-  ApplicationId: z.number().optional(),
+  ApplicationId: z.string().optional(),
   FullName: z.string().min(3),
   Email: z.string().email(),
-  DepartmentId: z.number().optional(),
+  DepartmentId: z.string().optional(),
 })
 
 
 export const changePasswordSchema = z.object({
-  ApplicationId: z.number(),
+  ApplicationId: z.string(),
   CurrentPassword: passwordSchema,
   NewPassword: passwordSchema,
   ConfirmPassword: passwordSchema.optional()

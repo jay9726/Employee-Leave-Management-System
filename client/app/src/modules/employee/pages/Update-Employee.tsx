@@ -1,34 +1,11 @@
-import React, { useEffect } from 'react'
-import { Building2, Shield, CheckCircle2, Loader } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getUserByIdAPI } from '@/services/userService';
+import React from 'react'
+import { Building2, Shield, CheckCircle2} from 'lucide-react';
 import UpdateEmployeeForm from '../components/update-employee-form';
-import { authHook } from '@/store/authStore';
+
 
 const UpdateEmployee: React.FC = () => {
-
-    const { user } = authHook();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!user || user.role !== 'Admin') {
-            navigate(-1);
-        }
-    }, [user])
-
-    const { id } = useParams();
-
-    const { data, isPending } = useQuery({
-        queryKey: ['getUserById', id],
-        queryFn: () => getUserByIdAPI(Number(id)),
-        enabled: !!id
-    })
-
-
     return (
         <>
-            {isPending && <Loader />}
             <div className="w-full ">
                 <div className="w-full min-h-auto flex justify-between ">
 
@@ -40,14 +17,14 @@ const UpdateEmployee: React.FC = () => {
                                 <div className="w-48 h-48 mx-auto bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/20 shadow-2xl">
                                     <div className="w-32 h-32 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                                         <span className="text-6xl font-bold text-white">
-                                            {data?.data[0].fullName.charAt(0)}
+                                            Demo
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <h2 className="text-3xl font-bold mb-2">{data?.data[0].fullName}</h2>
-                            <p className="text-blue-100 text-lg mb-4">{data?.data[0].email}</p>
+                            <h2 className="text-3xl font-bold mb-2">Demo</h2>
+                            <p className="text-blue-100 text-lg mb-4">demo@example.com</p>
 
                             <div className="space-y-4 max-w-md mx-auto">
                                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
@@ -58,7 +35,7 @@ const UpdateEmployee: React.FC = () => {
                                             </div>
                                             <div className="text-left">
                                                 <p className="text-sm text-blue-100">Department</p>
-                                                <p className="font-semibold text-lg">{data?.data[0].departmentName}</p>
+                                                <p className="font-semibold text-lg">Demo Department</p>
                                             </div>
                                         </div>
                                     </div>
@@ -100,7 +77,7 @@ const UpdateEmployee: React.FC = () => {
                             <h3 className="text-2xl font-bold text-gray-900 mb-2">Edit Information</h3>
                             <p className="text-gray-600 mb-8">Update user details and save changes</p>
 
-                            <UpdateEmployeeForm user={data?.data[0]} />
+                            <UpdateEmployeeForm  />
 
                         </div>
                     </div>

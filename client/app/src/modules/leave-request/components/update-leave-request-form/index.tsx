@@ -5,21 +5,21 @@ import { updateLeaveRequestSchema, type UpdateLeaveRequestPayload } from "../../
 import { updateLeaveRequestDefaultValues } from "../../schemas/leaveRequestDefaultValues";
 import { Controller, useForm } from "react-hook-form";
 import { useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { updateLeaveRequestAPI } from "@/services/leaveRequestService";
 import Loader from "@/components/loader";
 import Icon from "@/components/icon";
+import { useUpdateLeaveRequest } from "../../apis/mutation";
+import { useGetLeaveRequestByUserId } from "../../apis/queries";
 
 interface Props {
-  leave: any[];
+  // leave: any[];
   appAndLeaveId: {
-    leaveRequestId: number;
-    reviewedById: number;
+    leaveRequestId: string;
+    reviewedById: string;
   };
   setOpenModal: () => void;
 }
 
-const UpdateLeaveRequestForm: React.FC<Props> = ({ leave, appAndLeaveId, setOpenModal }) => {
+const UpdateLeaveRequestForm: React.FC<Props> = ({ appAndLeaveId, setOpenModal }) => {
 
   const toast = useToast();
 
@@ -28,34 +28,39 @@ const UpdateLeaveRequestForm: React.FC<Props> = ({ leave, appAndLeaveId, setOpen
     defaultValues: updateLeaveRequestDefaultValues,
   });
 
+  const { data: leaveData } = useGetLeaveRequestByUserId(appAndLeaveId.reviewedById);
+
   useEffect(() => {
-    reset(updateLeaveRequestDefaultValues);
+    if (!leaveData) return;
   }, [appAndLeaveId, reset]);
 
-  const selectedLeave = leave.find(
-    (l) => l.leaveRequestId === appAndLeaveId.leaveRequestId
+  const selectedLeave = leaveData?.data.find(
+    (l: any) => l.leaveRequestId === appAndLeaveId.leaveRequestId
   );
 
-  const updateLeaveRequestmutation = useMutation({
-    mutationFn: updateLeaveRequestAPI,
-    onSuccess: () => {
-      window.location.reload();
-      toast.success("Leave updated successfully");
-      setOpenModal();
-    },
-  });
+  const { mutate, isPending } = useUpdateLeaveRequest();
 
   const onSubmit = (data: UpdateLeaveRequestPayload) => {
-    updateLeaveRequestmutation.mutate({
+    mutate({
       ...data,
       leaveRequestId: appAndLeaveId.leaveRequestId,
       reviewedById: appAndLeaveId.reviewedById,
+    }, {
+      onSuccess: () => {
+        window.location.reload();
+        toast.success("Leave updated successfully");
+        setOpenModal();
+      },
+      onError: () => {
+        window.location.reload();
+        toast.error("Failed to update leave. Please try again.");
+      }
     });
   };
 
   return (
     <>
-      {updateLeaveRequestmutation.isPending && <Loader />}
+      {isPending && <Loader />}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl transform transition-all animate-scaleIn">
           <div className="p-6">
@@ -172,7 +177,7 @@ const UpdateLeaveRequestForm: React.FC<Props> = ({ leave, appAndLeaveId, setOpen
                     <button
                       className="px-6 py-2.5 rounded-lg bg-linear-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
                     >
-                      {updateLeaveRequestmutation.isPending ? (
+                      {isPending ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           Updating...

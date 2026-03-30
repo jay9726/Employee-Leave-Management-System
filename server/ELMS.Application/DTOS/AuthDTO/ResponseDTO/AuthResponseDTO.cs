@@ -4,11 +4,20 @@ namespace ELMS.Application.DTOS.AuthDTO.ResponseDTO
 {
     public class AuthResponseDTO
     {
-        public int Id { get; set; }
         public string? Token { get; set; }
+        public AuthUser? AuthUser { get; set; }
+
+    }
+
+
+
+
+    public class AuthUser
+    {
+        public string? EmployeeId { get; set; }
         public string? Email { get; set; }
 
-        public int? departmentId { get; set; }
+        public string? DepartmentId { get; set; }
 
         public string? FullName { get; set; }
 
@@ -19,3 +28,5 @@ namespace ELMS.Application.DTOS.AuthDTO.ResponseDTO
         public string? ImagePath { get; set; }
     }
 }
+
+

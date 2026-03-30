@@ -6,7 +6,7 @@ export const registerDefaultValues : RegisterSchemaPayload = {
   FullName: "",
   Email: "",
   Password: "",
-  DepartmentId : 0
+  DepartmentId : ""
 };
 
 export const loginDefaultValues: LoginSchemaPayload = {
@@ -26,14 +26,14 @@ export const resetPasswordDefaultValues:ResetPasswordPayload = {
 
 export const updateProfileDefaultValues:UpdateProfilePayload = {
   ImagePath: undefined,
-  ApplicationId: 0,
+  ApplicationId: "",
   FullName: "",
   Email: "",
-  DepartmentId: 0,
+  DepartmentId: "",
 };
 
 export const changePasswordDefaultValues = {
-  ApplicationId: 0,
+  ApplicationId: "",
   CurrentPassword: "",
   NewPassword: "",
   ConfirmPassword: "",

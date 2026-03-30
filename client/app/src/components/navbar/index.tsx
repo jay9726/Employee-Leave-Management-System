@@ -1,18 +1,16 @@
 import { useNavigate } from 'react-router-dom';
-import { authHook } from '../../store/authStore';
 import { useState, useRef, useEffect } from 'react';
 import { User, LogOut, ChevronDown } from 'lucide-react';
+import { SessionAuthentication } from '@/modules/auth/guards/sessionAuthentication';
+import { useGetUserById } from '@/modules/employee/apis/queries';
+import Loader from '../loader';
 
 const Navbar = () => {
-    const { user, logoutUser } = authHook();
+
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-
-    const handleLogout = () => {
-        logoutUser();
-        navigate('/');
-    };
+    const session = SessionAuthentication.getSession();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -25,6 +23,14 @@ const Navbar = () => {
     }, []);
 
 
+    const { data: user, isPending: isUserPending } = useGetUserById(session?.authUser.employeeId)
+
+    useEffect(() => {
+        if (!user) return
+    }, [user])
+
+    { isUserPending && (<Loader />) }
+    console.log(user)
     return (
         <>
             <nav className="sticky top-0 w-full bg-white z-1">
@@ -55,14 +61,14 @@ const Navbar = () => {
                             >
                                 <div className="profile-avatar w-10 h-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
                                     <img
-                                        src={`https://localhost:7287${user?.imagePath}`}
+                                        src={`https://localhost:7287${user?.data[0].imagePath}`}
                                         alt="Profile"
                                         className="w-full h-full object-cover rounded-full"
                                     />
                                 </div>
                                 <div className="hidden lg:block text-left">
-                                    <p className="text-sm font-bold text-gray-900">{user?.fullName || 'User'}</p>
-                                    <p className="text-xs text-gray-500 font-medium">{user?.role || 'Member'}</p>
+                                    <p className="text-sm font-bold text-gray-900">{user?.data[0].fullName}</p>
+                                    <p className="text-xs text-gray-500 font-medium">{user?.data[0].email}</p>
                                 </div>
                                 <ChevronDown
                                     className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''
@@ -75,8 +81,8 @@ const Navbar = () => {
                                     <div className="bg-linear-to-br from-blue-500 to-purple-600 p-5 text-white">
                                         <div className="flex items-center gap-4">
                                             <div className="flex-1">
-                                                <p className="font-bold text-base">{user?.fullName || 'User Name'}</p>
-                                                <p className="text-sm text-blue-100">{user?.email || 'user@example.com'}</p>
+                                                <p className="font-bold text-base">{user?.data[0].fullName}</p>
+                                                <p className="text-sm text-blue-100">{user?.data[0].email}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -84,7 +90,7 @@ const Navbar = () => {
                                     <div className="p-2">
                                         <button
                                             onClick={() => {
-                                                navigate('/home/profile');
+                                                navigate('/employee/profile');
                                                 setIsProfileOpen(false);
                                             }}
                                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group"
@@ -102,7 +108,7 @@ const Navbar = () => {
 
                                         <button
                                             onClick={() => {
-                                                navigate('/home/changepassword');
+                                                navigate('/employee/changepassword');
                                                 setIsProfileOpen(false);
                                             }}
                                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group"
@@ -119,8 +125,8 @@ const Navbar = () => {
 
                                         <button
                                             onClick={() => {
-                                                setIsProfileOpen(false);
-                                                handleLogout();
+                                                SessionAuthentication.clearSession();
+                                                navigate('/');
                                             }}
                                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 group"
                                         >

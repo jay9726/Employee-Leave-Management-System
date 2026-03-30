@@ -1,134 +1,124 @@
+using ELMS.API.Extension;
+using ELMS.API.Filter;
 using ELMS.Application.IService;
 using ELMS.Application.Service;
-using ELMS.Data.DB_Connection;
-using ELMS.Data.Entity;
-using ELMS.Data.IRepo;
-using ELMS.Data.Repo;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ELMS.Authentication.JWT.Service;
+using ELMS.Domain.Entities.Identity;
+using ELMS.Persistance.Context;
+using ELMS.Persistance.Extension;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
-using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-builder.Services.AddDbContext<DBConenct>(option =>
-    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+var jwtKey = builder.Configuration["Jwt:Key"];
+var connectionString = builder.Configuration.GetConnectionString("ELMSConnectionString");
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException(
+        "JWT Key is not configured. Set the 'Jwt__Key' environment variable.");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "Database connection string is not configured. Set the 'ELMSConnectionString' environment variable.");
 
 
 
 //Register Identity     
-builder.Services.AddIdentity<AppUser, AppUserRole>(options =>
+builder.Services.RegisterServices(builder.Configuration);
+builder.Services.RegisterApplicationServices();
+builder.Services.ConfigureCorsPolicy(builder.Configuration);
+
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+builder.Services.Configure<IdentityOptions>(options =>
 {
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+});
+
+
+
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidateGuidFilter>();
+});
+
+
+
+builder.Services.AddIdentity<Employee, Role>(options =>
+{
+    options.User.RequireUniqueEmail = true;
 })
-    .AddEntityFrameworkStores<DBConenct>()
-    .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ELMSContext>()
+    .AddDefaultTokenProviders()
+    .AddSignInManager<SignInManager<Employee>>();
 
 
-// JWT Authentication
-builder.Services.AddAuthentication(option =>
+
+
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+
+if (builder.Environment.IsDevelopment())
 {
-    option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(option =>
-{
-    option.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-            )
-    };
-});
-
-
-
-
-// Dependancy Injection
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-builder.Services.AddScoped<ILeaveRequestService,LeaveRequestService>();
-builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IForgetPasswordService,ForgetPasswordService>();
-builder.Services.AddScoped<ICompanyHolidayService, CompanyHolidayService>();
-builder.Services.AddScoped<ICompanyHolidayRepository, CompanyHolidayRepository>();
-
-
-builder.Services.AddCors(option =>
-{
-    option.AddPolicy("ReactApp", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-        .AllowAnyHeader()
-        .AllowAnyMethod();
-    });
-});
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+}
 
 
 builder.Services.AddControllers();
 
-
-builder.Services.AddOpenApi();
-
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(c =>
-{
-    var securitySchema = new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        Description = "JWT Authorization header using the Bearer scheme",
-    };
-
-    c.AddSecurityDefinition("Bearer", securitySchema);
-
-    //var securityRequirment = new OpenApiSecurityRequirement
-    //{
-    //    {
-    //        new OpenApiSecurityScheme { Reference = new OpenApiReference {Type = ReferenceType.SecurityScheme, Id = "Bearer"}},
-    //        new List<string>()
-    //    }
-    //};
-
-    //c.AddSecurityRequirement(securityRequirment);
-
-});
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+app.ApplyMigrations();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapSwagger();
+    app.UseSwagger();
     app.UseSwaggerUI();
-}
-app.UseStaticFiles();
+    app.UseDeveloperExceptionPage();
 
+}
+
+
+app.UseCors();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+        ctx.Context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+        ctx.Context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+    }
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+
+
+//app.UseErrorHandler();
 app.UseHttpsRedirection();
 
-app.UseCors("ReactApp");
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();

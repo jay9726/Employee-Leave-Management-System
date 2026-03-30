@@ -1,4 +1,4 @@
-﻿using ELMS.Data.Enums;
+﻿using ELMS.Domain.Enum;
 
 namespace ELMS.Application.DTOS.CompanyHolidayDTO
 {

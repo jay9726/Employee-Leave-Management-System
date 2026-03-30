@@ -1,56 +1,51 @@
 import { useToast } from '@/hooks/toast';
-import { authHook } from '@/store/authStore';
 import React from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { changePasswordSchema, type ChangePasswordPayload } from '../../schemas/authSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordDefaultValues } from '../../schemas/authDefaultValues';
-import { useMutation } from '@tanstack/react-query';
-import { changePasswordAPI } from '@/services/forgetPasswordService';
 import Icon from '@/components/icon';
 import InputComponent from '@/components/input-component';
+import { useChangePassword } from '../../apis/mutation';
+import { SessionAuthentication } from '../../guards/sessionAuthentication';
 
 const ChangePasswordForm: React.FC = () => {
 
-  const { user } = authHook();
   const toast = useToast();
+  const session = SessionAuthentication.getSession();
+
   const { control, handleSubmit, reset } = useForm({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: changePasswordDefaultValues,
   });
 
-  const changePasswordMutation = useMutation({
-    mutationFn: (data: any) => changePasswordAPI(data),
-    onSuccess: (res) => {
-      if (res.data.statusCode === 200) {
-        reset();
-        toast.success(res.data.message)
-      } else if (res.data.statusCode === 404) {
-        reset();
-        toast.error(res.data.message)
-      } else if (res.data.statusCode === 400) {
-        reset();
-        toast.error(res.data.message)
-      } else {
-        toast.error("Something went wrong")
-      }
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    }
-  })
+  const { mutate, isPending } = useChangePassword();
 
   const onSubmit = async (data: ChangePasswordPayload) => {
-    try {
-      const payload = {
-        ApplicationId: user?.id,
-        CurrentPassword: data.CurrentPassword,
-        NewPassword: data.NewPassword
-      }
-      changePasswordMutation.mutate(payload);
-    } catch (error) {
-      console.log(error);
+    const payload = {
+      ApplicationId: session?.authUser?.employeeId,
+      CurrentPassword: data.CurrentPassword,
+      NewPassword: data.NewPassword
     }
+    mutate(payload, {
+      onSuccess: (res) => {
+        if (res.data.statusCode === 200) {
+          reset();
+          toast.success(res.data.message)
+        } else if (res.data.statusCode === 404) {
+          reset();
+          toast.error(res.data.message)
+        } else if (res.data.statusCode === 400) {
+          reset();
+          toast.error(res.data.message)
+        } else {
+          toast.error("Something went wrong")
+        }
+      },
+      onError: (err) => {
+        toast.error(err.message);
+      }
+    });
   };
 
 
@@ -71,10 +66,11 @@ const ChangePasswordForm: React.FC = () => {
               wrapperclassName="w-full"
               togglePassword
               error={fieldState.error?.message}
+              disable={isPending}
               leftIcon={<Icon name='password' width={18} height={18} stroke='blue' />}
+              />
+            )}
             />
-          )}
-        />
       </div>
 
       <div>
@@ -82,18 +78,19 @@ const ChangePasswordForm: React.FC = () => {
         <Controller
           name="NewPassword"
           control={control}
-          render={({ field,fieldState }) => (
-             <InputComponent
+          render={({ field, fieldState }) => (
+            <InputComponent
               {...field}
               type='password'
               placeholder="Enter Your New Password"
               wrapperclassName="w-full"
               togglePassword
+              disable={isPending}
               error={fieldState.error?.message}
               leftIcon={<Icon name='password' width={18} height={18} stroke='blue' />}
+              />
+            )}
             />
-          )}
-        />
       </div>
 
       <div>
@@ -109,6 +106,7 @@ const ChangePasswordForm: React.FC = () => {
               value={field.value || ''}
               wrapperclassName="w-full"
               togglePassword
+              disable={isPending}
               error={fieldState.error?.message}
               leftIcon={<Icon name='password' width={18} height={18} stroke='blue' />}
             />
@@ -121,7 +119,7 @@ const ChangePasswordForm: React.FC = () => {
           className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
         >
           <Icon name="Check" width={20} height={20} />
-          Update Password
+          {isPending ? 'Updating Password...' : 'Update Password'}
         </button>
       </div>
     </form>

@@ -1,42 +1,37 @@
 import Icon from '@/components/icon';
 import { useToast } from '@/hooks/toast';
 import { deleteEmployee } from '@/redux/slice/employeeSlice';
-import { deleteUserAPI } from '@/services/userService';
-import { useMutation } from '@tanstack/react-query';
 import React from 'react'
 import { useDispatch } from 'react-redux';
 import { NavLink } from 'react-router-dom';
+import { useDeleteUser } from '../../apis/mutation';
 
 interface EmployeeListCardProps {
     user: any;
 }
 
 const EmployeeListCard: React.FC<EmployeeListCardProps> = ({ user }) => {
-
     const dispatch = useDispatch();
     const toast = useToast();
 
-    const userDeleteMutation = useMutation({
-        mutationFn: (userId: number) => deleteUserAPI(userId),
-        onSuccess: (res: any) => {
-            debugger
-            if (res.data.code === 400) {
-                toast.warning(res.data.message);
-            } else if (res.status === 200) {
-                dispatch(deleteEmployee(res.data.applicationId))
-                toast.success('User deleted successfully');
-            } else {
-                toast.error('Something went wrong');
-            }
-        },
-        onError: (res: any) => {
-            toast.error(res.data);
-        }
-    })
+    const { mutate, isPending } = useDeleteUser();
 
-    const handleDelete = (userId: number) => {
+    const handleDelete = (userId: string) => {
+        console.log("id", userId)
         if (window.confirm('Are you sure you want to delete this user?')) {
-            userDeleteMutation.mutate(userId);
+            mutate(userId, {
+                onSuccess: (res) => {
+                    if (res.data.code === 400) {
+                        toast.warning(res.data.message);
+                    } else if (res.data.code === 200) {
+                        dispatch(deleteEmployee(res.data.applicationId))
+                        toast.success('User deleted successfully');
+                    }
+                },
+                onError: (res: any) => {
+                    toast.error('Something went wrong');
+                }
+            });
         }
     };
 
@@ -72,14 +67,14 @@ const EmployeeListCard: React.FC<EmployeeListCardProps> = ({ user }) => {
                 </div>
 
                 <div className="flex justify-end gap-3">
-                    <NavLink to={`/home/employee/update/${user.applicationId}`}>
+                    <NavLink to={`/admin/employee/update/${user.employeeId}`}>
                         <button className="w-auto bg-blue-100 px-2 py-2 rounded-lg">
                             <Icon name="EditBadge" width={22} height={22} stroke="blue" />
                         </button>
                     </NavLink>
 
                     <button
-                        onClick={() => handleDelete(user.applicationId)}
+                        onClick={() => handleDelete(user.employeeId)}
                         className="w-auto bg-red-100 px-2 py-2 rounded-lg"
                     >
                         <Icon name="Trash" width={22} height={22} stroke="red" />

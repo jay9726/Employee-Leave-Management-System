@@ -2,58 +2,59 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { loginSchema, type LoginSchemaPayload } from "../../schemas/authSchema";
 import { loginDefaultValues } from "../../schemas/authDefaultValues";
-import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { authHook } from "../../../../store/authStore";
-import { loginAPI } from "../../../../services/authService";
 import Loader from "../../../../components/loader";
 import Icon from "../../../../components/icon";
-import { useToast } from "../../../../hooks/toast";
 import InputComponent from "@/components/input-component";
+import { useLogin } from "../../apis/mutation";
+import { SessionAuthentication } from "../../guards/sessionAuthentication";
+import { useDispatch } from "react-redux";
+import { loginUser } from "@/redux/slice/authSlice";
+import { useToast } from "@/hooks/toast";
 
 
 const LoginForm: React.FC = () => {
 
-    const toast = useToast();
-    const { loginUser } = authHook();
     const navigate = useNavigate();
+    const disPatch = useDispatch();
+    const toast = useToast();
 
     const { handleSubmit, control } = useForm({
         resolver: zodResolver(loginSchema),
         defaultValues: loginDefaultValues,
     })
 
-    const loginMutation = useMutation({
-        mutationFn: loginAPI,
-        onSuccess: (res) => {
-            debugger
-            if (res.status === 200) {
-                loginUser(res.data);
-                navigate('/home');
-                toast.success("Login Successfull!!!");
-            } else {
-                toast.error("Login Failed! Please Register Yourself");
-            }
-        },
-        onError: (error) => {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            }
-            console.log(error);
-        }
-    })
+    const { mutate, isPending } = useLogin();
 
     const onSubmit = async (data: LoginSchemaPayload) => {
-        try {
-            loginMutation.mutate(data);
-        } catch (error) {
-            console.log(error);
-        }
+        mutate(data, {
+            onSuccess: (res) => {
+                debugger
+                disPatch(loginUser(res.data))
+                SessionAuthentication.setSession(res.data)
+
+                if (res.data.authUser.role === 'Admin') {
+                    navigate('/admin')
+                    toast.success("Login Successfully");
+                } else {
+                    navigate('/employee')
+                    toast.success("Login Successfully");
+                }
+            },
+            onError: (error) => {
+                debugger
+                if (error?.response?.status === 401) {
+                    toast.error("Invalid email or password");
+                } else {
+                    toast.error("An error occurred. Please try again.");
+                }
+            }
+        })
     }
 
     return (
         <>
-            {loginMutation.isPending && <Loader />}
+            {isPending && <Loader />}
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1">
@@ -98,7 +99,7 @@ const LoginForm: React.FC = () => {
                     <button
                         className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                        {loginMutation.isPending ? "Singing In..." : "Sign In"}
+                        {isPending ? "Singing In..." : "Sign In"}
                         <Icon name="ArrowRight" width={20} height={20} stroke="white" />
                     </button>
                 </div>

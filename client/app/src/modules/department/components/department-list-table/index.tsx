@@ -1,14 +1,32 @@
 import { NavLink } from "react-router-dom";
 import Icon from "../../../../components/icon";
+import { useToast } from "@/hooks/toast";
+import { useDeleteDepartment } from "../../apis/mutation";
 
 
 interface departmentListTableProps {
     data: any[];
-    user: any;
-    handleDelete: (id: number) => void;
 }
 
-const DepartmentListTable: React.FC<departmentListTableProps> = ({ data, user, handleDelete }) => {
+const DepartmentListTable: React.FC<departmentListTableProps> = ({ data }) => {
+
+    const toast = useToast();
+
+    const { mutate, isPending } = useDeleteDepartment();
+
+    const handleDelete = (id: string) => {
+        if (window.confirm("Are you sure you want to delete this department?")) {
+            mutate(id, {
+                onSuccess: () => {
+                    toast.success("Department deleted successfully");
+                    // dispatch(removeDepartment(id));
+                },
+                onError: () => {
+                    toast.error("Department deletion failed");
+                },
+            });
+        }
+    }
     return (
         <div className="overflow-x-auto">
             <table className="w-full">
@@ -32,14 +50,14 @@ const DepartmentListTable: React.FC<departmentListTableProps> = ({ data, user, h
                                 Description
                             </div>
                         </th>
-                        {user?.role === "Admin" && (
-                            <th className="px-6 py-4 text-center">
-                                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Icon name="action" width={16} height={16} stroke="black" />
-                                    Actions
-                                </div>
-                            </th>
-                        )}
+                        {/* {user?.role === "Admin" && ( */}
+                        <th className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-700">
+                                <Icon name="action" width={16} height={16} stroke="black" />
+                                Actions
+                            </div>
+                        </th>
+                        {/* )} */}
                     </tr>
                 </thead>
 
@@ -66,7 +84,7 @@ const DepartmentListTable: React.FC<departmentListTableProps> = ({ data, user, h
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 bg-linear-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
                                             <span className="text-sm font-bold text-blue-600">
-                                                {department.id}
+                                                {index + 1}
                                             </span>
                                         </div>
                                     </div>
@@ -81,23 +99,24 @@ const DepartmentListTable: React.FC<departmentListTableProps> = ({ data, user, h
                                         {department.description}
                                     </div>
                                 </td>
-                                {user?.role === "Admin" && (
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <NavLink
-                                                to={`/home/department/update/${department.id}`}
-                                                className="bg-blue-200 px-2 py-2 rounded-lg">
-                                                <Icon name="EditBadge" width={18} height={18} stroke="blue" />
-                                            </NavLink>
+                                {/* {user?.role === "Admin" && ( */}
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <NavLink
+                                            to={`/admin/department/update/${department.departmentId}`}
+                                            className="bg-blue-200 px-2 py-2 rounded-lg">
+                                            <Icon name="EditBadge" width={18} height={18} stroke="blue" />
+                                        </NavLink>
 
-                                            <button
-                                                onClick={() => handleDelete(department.id)}
-                                                className="bg-red-200 px-2 py-2 rounded-lg">
-                                                <Icon name="Trash" width={18} height={18} stroke="red" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                )}
+                                        <button
+                                            disabled={isPending}
+                                            onClick={() => handleDelete(department.departmentId)}
+                                            className="bg-red-200 px-2 py-2 rounded-lg">
+                                            <Icon name="Trash" width={18} height={18} stroke="red" />
+                                        </button>
+                                    </div>
+                                </td>
+                                {/* )} */}
                             </tr>
                         ))
                     )}

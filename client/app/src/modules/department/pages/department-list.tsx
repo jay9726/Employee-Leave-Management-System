@@ -1,80 +1,46 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { deleteDepartmentAPI, getAllDepartmentsAPI } from "../../../services/departmentService"
-import { authHook } from "../../../store/authStore"
-import { NavLink, useNavigate, useSearchParams } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import Icon from "../../../components/icon"
 import DepartmentListTable from "../components/department-list-table"
-import { useToast } from "@/hooks/toast"
-import { useDispatch, useSelector } from "react-redux"
-import { useEffect } from "react"
-import { removeDepartment, setDepartments } from "@/redux/slice/departmentSlice"
 import Loader from "@/components/loader"
-import Paggination from "@/components/pagination-component"
-import { setCurrentPage, setTotalPages } from "@/redux/slice/paginationSlice"
+import { useGetAllDepartments } from "../apis/queries"
 
 
 const DepartmentList = () => {
 
-  const { user } = authHook();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (!user) {
-      navigate(-1);
-    }
-  }, [user])
+  // const navigate = useNavigate();
+  // const dispatch = useDispatch();
 
 
-
-  const toast = useToast();
-  const [searchParam, setSearchParams] = useSearchParams();
-  const departments = useSelector((state: any) => state.department.department);
-  
-  
-  const { currentPage, itemPerPage, totalPages } = useSelector((state: any) => state.pagination)
-  const totalPage = Math.ceil(1000 / itemPerPage);
-  dispatch(setTotalPages(totalPage));
-
-  const { isPending } = useQuery({
-    queryKey: ['department', currentPage],
-    queryFn: () => getAllDepartmentsAPI(currentPage)
-      .then((res) => {
-        dispatch(setDepartments(res.data.data));
-      }),
-    staleTime: 5 * 60 * 1000,
-  });
+  // const [searchParam, setSearchParams] = useSearchParams();
+  // // const departments = useSelector((state: any) => state.department.department);
 
 
-  useEffect(() => {
-    setSearchParams({ page: currentPage.toString() });
-  }, [currentPage]);
+  // const { currentPage, itemPerPage, totalPages } = useSelector((state: any) => state.pagination)
+  // const totalPage = Math.ceil(1000 / itemPerPage);
+  // dispatch(setTotalPages(totalPage));
+
+  // const { isPending } = useQuery({
+  //   queryKey: ['department', currentPage],
+  //   queryFn: () => getAllDepartmentsAPI(currentPage)
+  //     .then((res) => {
+  //       dispatch(setDepartments(res.data.data));
+  //     }),
+  //   staleTime: 5 * 60 * 1000,
+  // });
 
 
-
-  const deleteDepartmentMutation = useMutation({
-    mutationFn: (id: number) => deleteDepartmentAPI(id),
-    onSuccess: (res: any, id: number) => {
-      console.log(res)
-      dispatch(removeDepartment(id));
-      toast.success("Department deleted successfully");
-    },
-    onError: (res: any) => {
-      toast.error(res.data);
-    },
-  })
+  // useEffect(() => {
+  //   setSearchParams({ page: currentPage.toString() });
+  // }, [currentPage]);
 
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this department?")) {
-      deleteDepartmentMutation.mutate(id)
-    }
-  }
+  const { data, isPending } = useGetAllDepartments();
+
+  { isPending && <Loader /> }
 
 
   return (
     <>
-      {isPending && <Loader />}
       <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 py-8 px-4">
         <div className="w-full">
           <div className="">
@@ -110,29 +76,29 @@ const DepartmentList = () => {
                   All Departments
                 </h3>
                 <span className="bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full">
-                  {departments?.length} Total
+                  {data?.data?.length} Total
                 </span>
               </div>
 
-              {user?.role === "Admin" && (
-                <NavLink
-                  to="/home/department/add"
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
-                >
-                  <Icon name="Plus" width={20} height={20} stroke="blue" />
-                  Add Department
-                </NavLink>
-              )}
+              {/* {user?.role === "Admin" && ( */}
+              <NavLink
+                to="/admin/department/add"
+                className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <Icon name="Plus" width={20} height={20} stroke="blue" />
+                Add Department
+              </NavLink>
+              {/* )} */}
             </div>
-            <DepartmentListTable data={departments} user={user} handleDelete={handleDelete} />
+            <DepartmentListTable data={data?.data} />
           </div>
         </div>
         <div className="p-3">
-          <Paggination
+          {/* <Paggination
             totalPages={totalPages}
             currentPage={currentPage}
             setCurrentPage={(page) => { dispatch(setCurrentPage(page)) }}
-          />
+          /> */}
         </div>
       </div>
     </>

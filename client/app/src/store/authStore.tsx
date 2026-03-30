@@ -29,14 +29,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
     const loginUser = (data: User) => {
-        localStorage.setItem('ELMS', JSON.stringify(data));
+        sessionStorage.setItem('Auth_Session', JSON.stringify(data));
         setUser(data);
     }
 
     const logoutUser = async (): Promise<boolean | undefined> => {
         if (!user?.token) return;
 
-        localStorage.removeItem("ELMS");
+        sessionStorage.removeItem("Auth_Session");
         setUser(null);
         return true;
     }

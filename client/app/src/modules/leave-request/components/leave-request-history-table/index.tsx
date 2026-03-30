@@ -2,10 +2,10 @@ import React from 'react'
 import { statusStyles } from '../../pages/leave-request-list'
 import Icon from '../../../../components/icon'
 import { useMutation } from '@tanstack/react-query';
-import { cancelLeaveAPI } from '@/services/leaveRequestService';
 import { useToast } from '@/hooks/toast';
 import { useDispatch } from 'react-redux';
 import { updateLeaveReqeust } from '@/redux/slice/leaverequestSlice';
+import { useCancelLeave } from '../../apis/mutation';
 
 interface leaveRequestHistoryTableProps {
     leaverequest: any[];
@@ -14,23 +14,21 @@ interface leaveRequestHistoryTableProps {
 const LeaveRequestHistoryTable: React.FC<leaveRequestHistoryTableProps> = ({ leaverequest }) => {
 
     const toast = useToast();
-    const dispatch = useDispatch();
 
-    const cancelLeaveRequestsMutation = useMutation({
-        mutationFn: async (requestId: number) => cancelLeaveAPI(requestId)
-        .then((res:any) => {
-            dispatch(updateLeaveReqeust(res.data.data));
-            toast.success('Leave request canceled successfully');
-        }).catch((error:any) => {
-            toast.error('Failed to cancel leave request');
-            console.log(error);
-        })
-    });
+    const { mutate, isPending } = useCancelLeave();
 
     const handleRequestCancel = (requestId: number) => {
         try {
             if (window.confirm('Are you sure you want to cancel this leave request?')) {
-                cancelLeaveRequestsMutation.mutate(requestId);
+                mutate(requestId, {
+                    onSuccess: () => {
+                        toast.success('Leave request canceled successfully');
+                    },
+                    onError: (error) => {
+                        toast.error(error?.response?.data?.message);
+
+                    }
+                });
             }
         } catch (error) {
             console.log(error);

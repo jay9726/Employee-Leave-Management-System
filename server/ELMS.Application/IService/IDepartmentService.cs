@@ -7,10 +7,10 @@ namespace ELMS.Application.IService
     {
         Task<APIResponseDTO<int>> GetDepartmentCountAsync();
         Task<APIResponseDTO<IEnumerable<GetDepartmentDTO>>> GetOnlyDepartmentAsync();
-        Task<APIResponseDTO<IEnumerable<GetDepartmentDTO>>> GetAllDepartmentAsync(int page);
-        Task<APIResponseDTO<GetDepartmentDTO>> GetDepartmentByIdAsync(int id);
+        Task<APIResponseDTO<IEnumerable<GetDepartmentDTO>>> GetAllDepartmentAsync();
+        Task<APIResponseDTO<GetDepartmentDTO>> GetDepartmentByIdAsync(Guid id);
         Task<APIResponseDTO<AddDepartmentDTO>> AddDepartmentAsync(AddDepartmentDTO dto);
-        Task<APIResponseDTO<AddDepartmentDTO>> UpdateDepartmentAsync(int id, AddDepartmentDTO dto);
-        Task<APIResponseDTO<GetDepartmentDTO>> DeleteDepartmentAsync(int id);
+        Task<APIResponseDTO<AddDepartmentDTO>> UpdateDepartmentAsync(Guid id, AddDepartmentDTO dto);
+        Task<APIResponseDTO<GetDepartmentDTO>> DeleteDepartmentAsync(Guid id);
     }
 }

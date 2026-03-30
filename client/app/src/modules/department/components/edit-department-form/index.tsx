@@ -3,24 +3,19 @@ import { departmentSchema, type DepartmentSchemaPayload } from "../../schemas/de
 import { zodResolver } from "@hookform/resolvers/zod";
 import { departmentDefaultValues } from "../../schemas/departmentDefaultValue";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getDepartmentByIdAPI, updateDepartmentAPI } from "../../../../services/departmentService";
-import { authHook } from "../../../../store/authStore";
 import Loader from "../../../../components/loader";
 import Icon from "../../../../components/icon";
 import { useToast } from "@/hooks/toast";
 import InputComponent from "@/components/input-component";
+import { useGetDepartmentById } from "../../apis/queries";
+import { useEffect } from "react";
+import { useUpdateDepartment } from "../../apis/mutation";
 
 
 const EditDepartmentForm = () => {
 
-    const { user } = authHook();
     const navigate = useNavigate();
     const toast = useToast();
-
-    if (!user || user.role !== 'Admin') {
-        navigate(-1);
-    }
 
     const { id } = useParams();
 
@@ -29,38 +24,28 @@ const EditDepartmentForm = () => {
         defaultValues: departmentDefaultValues
     });
 
-    const { isPending } = useQuery({
-        queryKey: ['department', id],
-        queryFn: () => getDepartmentByIdAPI(Number(id))
-            .then((res) => {
-                reset(res.data.data);
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    })
+    const { data, isPending } = useGetDepartmentById(id as string);
 
-    const updateDepartmentMutation = useMutation({
-        mutationFn: (data: DepartmentSchemaPayload) => updateDepartmentAPI(Number(id), data)
-            .then((res) => {
-                if (res.status === 200) {
-                    toast.success('Department updated successfully')
-                    navigate('/home/department')
-                } else {
-                    toast.error('Something went wrong')
-                }
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    })
+    useEffect(() => {
+        if (data?.data) {
+            reset(data?.data);
+        }
+
+    }, [data?.data])
+
+
+    const { mutate, isPending: updatingDepartment } = useUpdateDepartment();
 
     const onSubmit = async (data: DepartmentSchemaPayload) => {
-        try {
-            updateDepartmentMutation.mutate(data)
-        } catch (error) {
-            console.log(error);
-        }
+        mutate({ departmentId: id as string, data }, {
+            onSuccess: () => {
+                toast.success('Department updated successfully')
+                navigate('/admin/department')
+            },
+            onError: () => {
+                toast.error('Something went wrong')
+            }
+        });
     };
 
     return (
@@ -118,7 +103,7 @@ const EditDepartmentForm = () => {
                     className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white py-3.5 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 flex items-center justify-center gap-2 cursor-pointer"
                 >
                     <Icon name="Clock" width={22} height={22} stroke="white" />
-                    <span> {updateDepartmentMutation.isPending ? 'Updatting...' : 'Update Department'}</span>
+                    <span> {updatingDepartment ? 'Updatting Department...' : 'Update Department'}</span>
                 </button>
             </form>
         </>

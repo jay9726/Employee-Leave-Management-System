@@ -1,25 +1,191 @@
-﻿using ELMS.Application.DTOS.APIResponse;
+﻿//using ELMS.Application.DTOS.APIResponse;
+//using ELMS.Application.DTOS.UserDTO;
+//using ELMS.Application.IService;
+//using ELMS.Data.Entity;
+//using ELMS.Data.IRepo;
+
+//namespace ELMS.Application.Service
+//{
+//    public class UserService : IUserService
+//    {
+//        private readonly IUserRepository _userRepository;
+
+//        public UserService(IUserRepository userRepository)
+//        {
+//            _userRepository = userRepository;
+//        }
+
+
+
+//        public async Task<APIResponseDTO<int>> GetEmployeeCountAsync()
+//        {
+//            var res = await _userRepository.GetEmployeeCountAsync();
+//            return new APIResponseDTO<int>(200, "Total Employee Count Fetched Sucessfully", res);
+//        }
+
+
+
+//        public async Task<IEnumerable<GetUserDTO?>> GetAllUserAsync()
+//        {
+//            var response = await _userRepository.GetAllUserAsync();
+
+//            return response.Select(x => new GetUserDTO
+//            {
+//                ApplicationId = x.Id,
+//                Email = x.Email,
+//                FullName = x.FullName,
+//                DepartmentId = x.DepartmentId,
+//                DepartmentName = x.Department?.DepartmentName,
+//                ImagePath = x.ImagePath
+//            }).ToList();
+//        }
+
+
+
+//        public async Task<List<GetUserDTO>?> GetByIdAsync(int id)
+//        {
+//            var result = await _userRepository.GetUserByIdAsync(id);
+
+//            if (result == null) return null;
+
+//            return new List<GetUserDTO>
+//            {
+//                new GetUserDTO {
+//                ApplicationId = result.Id,
+//                Email = result.Email,
+//                FullName = result.FullName,
+//                DepartmentId = result.DepartmentId,
+//                DepartmentName = result.Department?.DepartmentName,
+//                ImagePath = result.ImagePath
+//                }
+//            };
+//        }
+
+
+
+//        public async Task<GetUserDTO?> UpdateAppUserAsycn(UpdateUserDTO updateUserDTO)
+//        {
+
+//            if (updateUserDTO == null || updateUserDTO.ImagePath.Length == 0)
+//                return null;
+
+//            var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+
+//            if (!allowedTypes.Contains(updateUserDTO.ImagePath.ContentType))
+//                return null;
+
+//            var uploadsFolder = Path.Combine(
+//                Directory.GetCurrentDirectory(),
+//                "wwwroot/uploads/profiles"
+//            );
+
+//            if (!Directory.Exists(uploadsFolder))
+//                Directory.CreateDirectory(uploadsFolder);
+
+//            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(updateUserDTO.ImagePath.FileName)}";
+//            var filePath = Path.Combine(uploadsFolder, fileName);
+
+//            using (var stream = new FileStream(filePath, FileMode.Create))
+//            {
+//                await updateUserDTO.ImagePath.CopyToAsync(stream);
+//            }
+
+//            var imagePath = $"/uploads/profiles/{fileName}";
+
+
+//            var data = new AppUser
+//            {
+//                Id = updateUserDTO.ApplicationId,
+//                FullName = updateUserDTO.FullName,
+//                Email = updateUserDTO.Email,
+//                DepartmentId = updateUserDTO.DepartmentId,
+//                ImagePath = imagePath,
+
+//            };
+
+//            var result = await _userRepository.UpdateAppUserAsycn(data);
+
+//            if (result == null) return null;
+
+//            return new GetUserDTO
+//            {
+//                ApplicationId = result.Id,
+//                Email = result.Email,
+//                FullName = result.FullName,
+//                DepartmentId = updateUserDTO.DepartmentId,
+//                DepartmentName = result.Department?.DepartmentName,
+//                ImagePath = result.ImagePath
+//            };
+//        }
+
+
+
+//        public async Task<GetUserDTO?> DeleteUserAsync(int id)
+//        {
+//            var result = await _userRepository.DeleteUserAsync(id);
+//            if (result == null) return null;
+//            return new GetUserDTO
+//            {
+//                ApplicationId = result.Id,
+//                Email = result.Email,
+//                FullName = result.FullName,
+//                DepartmentName = result.Department?.DepartmentName,
+//                ImagePath = result.ImagePath
+//            };
+//        }
+
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+using ELMS.Application.DTOS.APIResponse;
 using ELMS.Application.DTOS.UserDTO;
+using ELMS.Application.ICommon;
 using ELMS.Application.IService;
-using ELMS.Data.Entity;
-using ELMS.Data.IRepo;
+using ELMS.Domain.Entities.Identity;
 
 namespace ELMS.Application.Service
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<APIResponseDTO<int>> GetEmployeeCountAsync()
         {
             try
             {
-                var res = await _userRepository.GetEmployeeCountAsync();
+                var res = await _unitOfWork.UserRepository.GetEmployeeCountAsync();
                 return new APIResponseDTO<int>(200, "Total Employee Count Fetched Successfully", res);
             }
             catch (Exception)
@@ -36,14 +202,14 @@ namespace ELMS.Application.Service
         {
             try
             {
-                var response = await _userRepository.GetAllUserAsync();
+                var response = await _unitOfWork.UserRepository.GetAllUserAsync();
 
                 return response.Select(x => new GetUserDTO
                 {
-                    ApplicationId = x.Id,
+                    EmployeeId = x.Id.ToString(),
                     Email = x.Email,
                     FullName = x.FullName,
-                    DepartmentId = x.DepartmentId,
+                    DepartmentId = x.DepartmentId.ToString(),
                     DepartmentName = x.Department?.DepartmentName,
                     ImagePath = x.ImagePath
                 }).ToList();
@@ -54,11 +220,11 @@ namespace ELMS.Application.Service
             }
         }
 
-        public async Task<List<GetUserDTO>?> GetByIdAsync(int id)
+        public async Task<List<GetUserDTO>?> GetByIdAsync(Guid id)
         {
             try
             {
-                var result = await _userRepository.GetUserByIdAsync(id);
+                var result = await _unitOfWork.UserRepository.GetUserByIdAsync(id);
 
                 if (result == null) return null;
 
@@ -66,10 +232,10 @@ namespace ELMS.Application.Service
                 {
                     new GetUserDTO
                     {
-                        ApplicationId = result.Id,
+                        EmployeeId = result.Id.ToString(),
                         Email = result.Email,
                         FullName = result.FullName,
-                        DepartmentId = result.DepartmentId,
+                        DepartmentId = result.DepartmentId.ToString(),
                         DepartmentName = result.Department?.DepartmentName,
                         ImagePath = result.ImagePath
                     }
@@ -111,7 +277,7 @@ namespace ELMS.Application.Service
 
                 var imagePath = $"/uploads/profiles/{fileName}";
 
-                var data = new AppUser
+                var data = new Employee
                 {
                     Id = updateUserDTO.ApplicationId,
                     FullName = updateUserDTO.FullName,
@@ -120,16 +286,16 @@ namespace ELMS.Application.Service
                     ImagePath = imagePath,
                 };
 
-                var result = await _userRepository.UpdateAppUserAsycn(data);
+                var result = await _unitOfWork.UserRepository.UpdateAppUserAsycn(data);
 
                 if (result == null) return null;
 
                 return new GetUserDTO
                 {
-                    ApplicationId = result.Id,
+                    EmployeeId = result.Id.ToString(),
                     Email = result.Email,
                     FullName = result.FullName,
-                    DepartmentId = updateUserDTO.DepartmentId,
+                    DepartmentId = updateUserDTO.DepartmentId.ToString(),
                     DepartmentName = result.Department?.DepartmentName,
                     ImagePath = result.ImagePath
                 };
@@ -140,17 +306,17 @@ namespace ELMS.Application.Service
             }
         }
 
-        public async Task<GetUserDTO?> DeleteUserAsync(int id)
+        public async Task<GetUserDTO?> DeleteUserAsync(Guid id)
         {
             try
             {
-                var result = await _userRepository.DeleteUserAsync(id);
+                var result = await _unitOfWork.UserRepository.DeleteUserAsync(id);
 
                 if (result == null) return null;
 
                 return new GetUserDTO
                 {
-                    ApplicationId = result.Id,
+                    EmployeeId = result.Id.ToString(),
                     Email = result.Email,
                     FullName = result.FullName,
                     DepartmentName = result.Department?.DepartmentName,

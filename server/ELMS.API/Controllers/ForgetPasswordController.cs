@@ -1,49 +1,86 @@
-﻿using ELMS.Application.DTOS.ChangePasswordDTO;
-using ELMS.Application.DTOS.ForgetPasswordDTO;
-using ELMS.Application.DTOS.ResetPasswordDTO;
-using ELMS.Application.IService;
-using Microsoft.AspNetCore.Mvc;
+﻿////using ELMS.Application.DTOS.ChangePasswordDTO;
+////using ELMS.Application.DTOS.ForgetPasswordDTO;
+////using ELMS.Application.DTOS.ResetPasswordDTO;
+////using ELMS.Application.IService;
+////using Microsoft.AspNetCore.Mvc;
 
-namespace ELMS.API.Controllers
-{
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ForgetPasswordController : ControllerBase
-    {
-        private readonly IForgetPasswordService _forgetPasswordService;
+////namespace ELMS.API.Controllers
+////{
+////    [Route("api/[controller]")]
+////    [ApiController]
+////    public class ForgetPasswordController : ControllerBase
+////    {
+////        private readonly IForgetPasswordService _forgetPasswordService;
 
-        public ForgetPasswordController(IForgetPasswordService forgetPasswordService)
-        {
-            _forgetPasswordService = forgetPasswordService;
-        }
+////        public ForgetPasswordController(IForgetPasswordService forgetPasswordService)
+////        {
+////            _forgetPasswordService = forgetPasswordService;
+////        }
 
-        
-        [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO dto)
-        {
-            await _forgetPasswordService.SendResetLinkAsync(dto.Email);
-            return Ok(new { message = "If the email exists, a reset link has been sent." });
-        }
 
-        
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
-        {
-            await _forgetPasswordService.ResetPasswordAsync(
-                dto.Email,
-                dto.Token,
-                dto.NewPassword
-            );
 
-            return Ok(new { message = "Password reset successful." });
-        }
+////        [HttpPost("forgot-password")]
+////        public async Task<IActionResult> ForgotPassword(ForgotPasswordDTO dto)
+////        {
+////            await _forgetPasswordService.SendResetLinkAsync(dto.Email);
 
-        
-        [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordDTO)
-        {
-            var result = await _forgetPasswordService.ChangePasswordAsync(changePasswordDTO);
-            return StatusCode(result.StatusCode, result);
-        }
-    }
-}
+////            return Ok("If email exists, reset link sent.");
+////        }
+
+
+
+////        [HttpPost("reset-password")]
+////        public async Task<IActionResult> ResetPassword(ResetPasswordDTO dto)
+////        {
+////            await _forgetPasswordService.ResetPasswordAsync(
+////                dto.Email,
+////                dto.Token,
+////                dto.NewPassword
+////            );
+
+////            return Ok("Password reset successful");
+////        }
+
+
+////        [HttpPost("change-password")]
+////        public async Task<IActionResult> ChangePassword(ChangePasswordDTO changePasswordDTO)
+////        {
+////            var result = await _forgetPasswordService.ChangePasswordAsync(changePasswordDTO);
+////            return Ok(result);
+////        }
+
+////    }
+////}
+
+
+
+
+
+
+
+
+
+
+//using ELMS.Application.DTOS.ChangePasswordDTO;
+//using ELMS.Application.DTOS.ForgetPasswordDTO;
+//using ELMS.Application.DTOS.ResetPasswordDTO;
+//using ELMS.Application.IService;
+//using Microsoft.AspNetCore.Mvc;
+
+//namespace ELMS.API.Controllers
+//{
+//    [ApiController]
+//    [Route("api/[controller]")]
+//    public class ForgetPasswordController : ControllerBase
+//    {
+//        private readonly IForgetPasswordService _forgetPasswordService;
+
+//        public ForgetPasswordController(IForgetPasswordService forgetPasswordService)
+//        {
+//            _forgetPasswordService = forgetPasswordService;
+//        }
+
+//        // POST: api/ForgetPassword/forgot-password
+       
+//    }
+//}

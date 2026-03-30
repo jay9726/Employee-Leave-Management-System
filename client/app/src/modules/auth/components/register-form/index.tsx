@@ -4,12 +4,13 @@ import { registerSchema, type RegisterSchemaPayload } from "../../schemas/authSc
 import { registerDefaultValues } from "../../schemas/authDefaultValues";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { registerAPI } from "../../../../services/authService";
-import { getOnlyDepartmentAPI } from "../../../../services/departmentService";
 import Loader from "../../../../components/loader";
 import Icon from "../../../../components/icon";
 import { useToast } from "@/hooks/toast";
 import InputComponent from "@/components/input-component";
+import { useGetOnlyDepartment } from "@/modules/department/apis/queries";
+import { useEffect } from "react";
+import { useRegister } from "../../apis/mutation";
 
 
 const RegisterForm = () => {
@@ -22,46 +23,31 @@ const RegisterForm = () => {
         defaultValues: registerDefaultValues
     })
 
+    const { data, isPending } = useGetOnlyDepartment();
 
-    const { data } = useQuery({
-        queryKey: ['departments'],
-        queryFn: () => getOnlyDepartmentAPI()
-            .then((res) => { return res.data }),
-        staleTime: 5 * 60 * 1000
-    })
+    useEffect(() => {
+        if (!data) return
+    }, [])
 
-
-
-    const registerMutation = useMutation({
-        mutationFn: registerAPI,
-        onSuccess: (data) => {
-            if (data.status === 200) {
-                toast.success(data.data.message || "Registration Successfully");
-                navigate('/');
-            } else {
-                toast.error(data.data.message || "Registration Failed Please Try Again.");
-            }
-        },
-        onError: (error) => {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            }
-            console.log(error);
-        }
-    })
-
+    const { mutate, isPending: registerIsPending } = useRegister();
 
     const onSubmit = async (data: RegisterSchemaPayload) => {
-        try {
-            registerMutation.mutate(data);
-        } catch (error) {
-            console.log(error);
-        }
+        mutate(data, {
+            onSuccess: () => {
+                toast.success("Registration Successfully");
+                navigate('/');
+  },
+            onError: (error) => {
+                if (error?.response?.status === 400) {
+                    toast.error(error?.response?.data || "Registration Failed Please Try Again.");
+                }
+            }
+        });
     }
 
     return (
         <>
-            {registerMutation.isPending && <Loader />}
+            {isPending && <Loader />}
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col gap-2">
@@ -159,7 +145,6 @@ const RegisterForm = () => {
                                             <select
                                                 {...field}
                                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
-                                                onChange={(e) => field.onChange(Number(e.target.value))}
                                             >
                                                 <option value="">Select Department</option>
                                                 {
@@ -167,7 +152,7 @@ const RegisterForm = () => {
                                                         return (
                                                             <option
                                                                 key={index}
-                                                                value={department.id}
+                                                                value={department.departmentId}
                                                             >
                                                                 {department.departmentName}
                                                             </option>
@@ -193,7 +178,7 @@ const RegisterForm = () => {
                     <button
                         className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                        {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                        {registerIsPending ? "Creating Account..." : "Create Account"}
                         <Icon name="ArrowRight" width={20} height={20} />
                     </button>
                 </div>

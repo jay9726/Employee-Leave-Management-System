@@ -1,55 +1,50 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Icon from '@/components/icon';
-import { useQuery } from '@tanstack/react-query';
-import { getAllUsersAPI } from '@/services/userService';
 import { useNavigate } from 'react-router-dom';
-import { authHook } from '@/store/authStore';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch} from 'react-redux';
 import { setEmployee } from '@/redux/slice/employeeSlice';
 import Loader from '@/components/loader';
 import EmployeeListCard from '../components/employee-list-card';
 import InputComponent from '@/components/input-component';
 import { Search } from 'lucide-react';
+import { useGetAllUsers } from '../apis/queries';
 
 const EmployeeList: React.FC = () => {
 
-  const { user } = authHook();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const [searchEmloyee, setSearchEmloyee] = useState('')
 
-  useEffect(() => {
-    if (!user || user.role !== 'Admin') {
-      navigate(-1);
+  const { data, isPending } = useGetAllUsers();
+  dispatch(setEmployee(data?.data))
+
+
+  // const employee = useSelector((state: any) => state.employee.employee);
+
+  // const filterEmployee = employee.filter((emp: any) => {
+  //   return (
+  //     emp.fullName.toLowerCase().includes(searchEmloyee.toLowerCase()) ||
+  //     emp.email.toLowerCase().includes(searchEmloyee.toLowerCase()) ||
+  //     emp.departmentName.toLowerCase().includes(searchEmloyee.toLowerCase())
+  //   )
+  // })
+
+
+  const getContent = () => {
+    if (isPending) {
+      return <Loader />
+    } else if (data?.data.length > 0) {
+      return (
+        data?.data.map((user: any) => (
+          <EmployeeListCard key={user.id} user={user} />
+        ))
+      )
     }
-  }, [user])
-
-  const { isPending } = useQuery({
-    queryKey: ['employee'],
-    queryFn: () => getAllUsersAPI()
-      .then((res) => {
-        dispatch(setEmployee(res.data))
-        return res.data.data
-      }),
-    enabled: user?.role === 'Admin'
-  })
-
-
-  const employee = useSelector((state: any) => state.employee.employee);
-
-  const filterEmployee = employee.filter((emp: any) => {
-    return (
-      emp.fullName.toLowerCase().includes(searchEmloyee.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchEmloyee.toLowerCase()) ||
-      emp.departmentName.toLowerCase().includes(searchEmloyee.toLowerCase())
-    )
-  })
-
+  }
 
   return (
     <>
-      {isPending && <Loader />}
       <div className="min-h-screen py-2 px-2">
         <div className="max-w-full h-full flex flex-col gap-6">
           <div className="flex items-center justify-between flex-wrap ">
@@ -67,7 +62,7 @@ const EmployeeList: React.FC = () => {
 
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2"
-              onClick={() => navigate('/home/employee/add')}
+              onClick={() => navigate('/admin/employee/add')}
             >
               <Icon name="UserPlus" width={20} height={20} stroke="white" />
               Add Member
@@ -82,7 +77,7 @@ const EmployeeList: React.FC = () => {
             value={searchEmloyee}
           />
 
-          {filterEmployee.length === 0 ? (
+          {data?.data.length === 0 ? (
             <div className="bg-white rounded-3xl shadow-xl p-16 text-center border border-gray-100">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-32 h-32 bg-linear-to-br from-indigo-100 via-purple-100 to-pink-100 rounded-full flex items-center justify-center">
@@ -94,9 +89,7 @@ const EmployeeList: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filterEmployee.map((user: any) => (
-                <EmployeeListCard key={user.id} user={user} />
-              ))}
+              {getContent()}
             </div>
           )}
         </div>

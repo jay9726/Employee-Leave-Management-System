@@ -3,31 +3,25 @@ import InputComponent from '@/components/input-component';
 import { useToast } from '@/hooks/toast';
 import { registerDefaultValues } from '@/modules/auth/schemas/authDefaultValues';
 import { registerSchema, type UpdateProfilePayload } from '@/modules/auth/schemas/authSchema';
-import {  getOnlyDepartmentAPI } from '@/services/departmentService';
-import { updateUserAPI } from '@/services/userService';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Loader } from 'lucide-react';
 import React, { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGetUserById } from '../../apis/queries';
+import { useGetOnlyDepartment } from '@/modules/department/apis/queries';
+import { useUpdateUser } from '../../apis/mutation';
 
 
-interface updateemployeeFormProps {
-    user: any
-}
 
-const UpdateEmployeeForm: React.FC<updateemployeeFormProps> = ({ user }) => {
+const UpdateEmployeeForm: React.FC = () => {
 
     const toast = useToast();
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const { data } = useQuery({
-        queryKey: ['departments'],
-        queryFn: getOnlyDepartmentAPI,
-        enabled: !!id
-    })
+    const { data: user, isPending: isUserPending } = useGetUserById(id as string);
+    const { data: departments, isPending: isDepartmentsPending } = useGetOnlyDepartment();
 
     const { handleSubmit, control, reset, formState: { errors } } = useForm({
         resolver: zodResolver(registerSchema),
@@ -35,48 +29,39 @@ const UpdateEmployeeForm: React.FC<updateemployeeFormProps> = ({ user }) => {
     })
 
     useEffect(() => {
-        if (!user) return;
+        if (user && Array.isArray(user)) {
+            reset({
+                FullName: (user as any)[0].fullName,
+                Email: (user as any)[0].email
+            });
+        }
+    }, [user]);
 
-        reset({
-            FullName: user.fullName,
-            Email: user.email,
-            DepartmentId: user.departmentId
-        });
-    }, [user, reset]);
 
+    const { mutate, isPending: isUpdating } = useUpdateUser();
 
-    const updateMutation = useMutation({
-        mutationFn: (data: UpdateProfilePayload) => updateUserAPI(data),
-        onSuccess: (data) => {
-            if (data.status === 200) {
+    const onSubmit = (data: UpdateProfilePayload) => {
+        data.ApplicationId = id as string;
+        mutate(data, {
+            onSuccess: () => {
                 toast.success("Employee Updated Successfully");
-                navigate('/home/employee');
-            } else {
-                toast.error("Employee Update Failed Please Try Again.");
-            }
-        },
-        onError: (error) => {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            }
-            console.log(error);
-        }
-    })
+                navigate('/admin/employee');
 
-    const onSubmit = async (data: UpdateProfilePayload) => {
-        data.ApplicationId = Number(id);
-        try {
-            updateMutation.mutate(data);
-        } catch (error) {
-            console.log(error);
-        }
+            },
+            onError: (error) => {
+                if (error instanceof Error) {
+                    toast.error("Employee Update Failed Please Try Again.");
+                    toast.error(error.message);
+                }
+            }
+        });
     }
 
+    { isUserPending || isDepartmentsPending && <Loader /> }
 
-
+    console.log(user)
     return (
         <>
-            {updateMutation.isPending && <Loader />}
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col gap-2">
@@ -159,15 +144,15 @@ const UpdateEmployeeForm: React.FC<updateemployeeFormProps> = ({ user }) => {
                                             <select
                                                 {...field}
                                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
-                                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                            // onChange={(e) => field.onChange(Number(e.target.value))}
                                             >
                                                 <option value="">Select Department</option>
                                                 {
-                                                    data?.data.data.map((department: any, index: number) => {
+                                                    departments?.data.map((department: any, index: number) => {
                                                         return (
                                                             <option
                                                                 key={index}
-                                                                value={department.id}
+                                                                value={department.departmentId}
                                                             >
                                                                 {department.departmentName}
                                                             </option>
@@ -193,7 +178,7 @@ const UpdateEmployeeForm: React.FC<updateemployeeFormProps> = ({ user }) => {
                     <button
                         className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                        {updateMutation.isPending ? "Updating Account..." : "Update Account"}
+                        {isUpdating ? "Updating Account..." : "Update Account"}
                         <Icon name="ArrowRight" width={20} height={20} />
                     </button>
                 </div>

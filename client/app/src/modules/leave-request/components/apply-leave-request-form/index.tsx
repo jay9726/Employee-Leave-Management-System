@@ -2,9 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { leaveRequestDefaultValues } from "../../schemas/leaveRequestDefaultValues";
 import { leaveRequestSchema, type LeaveRequestSchemaPayload } from "../../schemas/leaveRequestSchemas";
 import { Controller, useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { applyLeaveRequestAPI } from "../../../../services/leaveRequestService";
-import { authHook } from "../../../../store/authStore";
 import { Loader } from "lucide-react";
 import Icon from "../../../../components/icon";
 import { useToast } from "@/hooks/toast";
@@ -12,46 +9,41 @@ import { useDispatch } from "react-redux";
 import { addLeaveRequest } from "@/redux/slice/leaverequestSlice";
 import { leaveTypes } from "@/constant/constant";
 import InputComponent from "@/components/input-component";
+import { SessionAuthentication } from "@/modules/auth/guards/sessionAuthentication";
+import { useApplyLeaveRequest } from "../../apis/mutation";
 
 
 const ApplyLeaveRequestForm = () => {
 
-    const { user } = authHook();
     const toast = useToast();
     const dispatch = useDispatch();
-
+    const session = SessionAuthentication.getSession();
 
     const { handleSubmit, control, reset, formState: { errors }, } = useForm<LeaveRequestSchemaPayload>({
         resolver: zodResolver(leaveRequestSchema),
         defaultValues: leaveRequestDefaultValues
     });
 
-    const applyLeaveRequestMutation = useMutation({
-        mutationFn: (data: LeaveRequestSchemaPayload) => applyLeaveRequestAPI(data)
-            .then((res) => {
-                if (res.status === 201) {
+    const { mutate, isPending } = useApplyLeaveRequest();
+
+    const onSubmit = async (data: LeaveRequestSchemaPayload) => {
+            data.employeeId = session.authUser!.employeeId;
+            data.departmentId = session.authUser!.departmentId;
+            mutate(data, {
+                onSuccess: (res) => {
                     dispatch(addLeaveRequest(res.data.data));
                     toast.success("Leave request applied successfully");
                     reset();
-                } else {
+                },
+                onError: () => {
                     toast.error("Leave request failed to apply");
                 }
-            })
-    })
-
-    const onSubmit = async (data: LeaveRequestSchemaPayload) => {
-        try {
-            data.applicantId = user!.id;
-            data.departmentId = user!.departmentId;
-            applyLeaveRequestMutation.mutate(data);
-        } catch (error) {
-            console.log(error);
-        }
+            });
     };
 
     return (
         <>
-            {applyLeaveRequestMutation.isPending && <Loader />}
+            {isPending && <Loader />}
             <div className="w-full sticky z-0 bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-8">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 bg-linear-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center">
@@ -163,7 +155,7 @@ const ApplyLeaveRequestForm = () => {
                                 className="w-full bg-linear-to-r from-green-600 to-emerald-600 text-white font-semibold px-4 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
                             >
                                 <Icon name="CircleCheck" width={18} height={18} stroke="white" />
-                                {applyLeaveRequestMutation.isPending ? "Applying..." : "Apply Leave"}
+                                {isPending ? "Applying..." : "Apply Leave"}
                             </button>
                         </div>
                     </div>

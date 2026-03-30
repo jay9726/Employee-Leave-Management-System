@@ -1,13 +1,11 @@
 import ApplyLeaveRequestForm from "../components/apply-leave-request-form";
-import { authHook } from "../../../store/authStore";
-import { useNavigate } from "react-router-dom";
 import LeaveRequestHistoryTable from "../components/leave-request-history-table";
-import { useEffect } from "react";
 import Icon from "../../../components/icon";
 import { useDispatch, useSelector } from "react-redux";
-import { useQuery } from "@tanstack/react-query";
-import { getLeaveRequestByUserIdAPI } from "@/services/leaveRequestService";
 import { setLeaveRequests } from "@/redux/slice/leaverequestSlice";
+import { SessionAuthentication } from "@/modules/auth/guards/sessionAuthentication";
+import { useGetLeaveRequestByUserId } from "../apis/queries";
+import Loader from "@/components/loader";
 
 export const statusStyles: Record<string, string> = {
     Approved: "bg-green-100 text-green-700",
@@ -18,34 +16,26 @@ export const statusStyles: Record<string, string> = {
 
 const LeaveRequestList = () => {
 
-    const { user } = authHook();
-    const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    useQuery({
-        queryKey: ['employeesbyid'],
-        queryFn: () => getLeaveRequestByUserIdAPI(Number(user?.id))
-            .then((res) => {
-                dispatch(setLeaveRequests(res.data.data))
-            })
-    })
+    const session = SessionAuthentication.getSession();
 
-    useEffect(() => {
-        if (!user || user.role === 'Admin') {
-            navigate(-1);
-        }
-    }, [user])
-
+    const { data, isPending } = useGetLeaveRequestByUserId(session?.authUser.employeeId)
+    dispatch(setLeaveRequests(data?.data))
 
     const leaveRequest = useSelector((state: any) => state.leaveRequest.leaveRequest);
 
-    useEffect(() => {
-        if (!user || user.role === 'Admin') {
-            navigate(-1);
+    const getContent = () => {
+        if (isPending) {
+            return <Loader />
         }
-    }, [user, navigate]);
-
-
+        else if (leaveRequest?.length > 0) {
+            return (
+                <LeaveRequestHistoryTable leaverequest={leaveRequest} />
+            )
+        }
+    }
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-green-50 to-emerald-50 py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -80,7 +70,8 @@ const LeaveRequestList = () => {
                         </div>
                     </div>
 
-                    <LeaveRequestHistoryTable leaverequest={leaveRequest} />
+                    {getContent()}
+                    {/* <LeaveRequestHistoryTable leaverequest={leaveRequest} /> */}
 
                 </div>
             </div>

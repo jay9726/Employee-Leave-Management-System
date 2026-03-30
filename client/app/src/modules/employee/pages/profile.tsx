@@ -1,31 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Building2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building2, Loader } from 'lucide-react';
 import Icon from '@/components/icon';
 import { useNavigate } from 'react-router-dom';
-import { authHook } from '@/store/authStore';
-import { useQuery } from '@tanstack/react-query';
-import { getUserByIdAPI } from '@/services/userService';
 import UpdateProfileModal from './profile-modal';
+import { useGetUserById } from '../apis/queries';
+import { SessionAuthentication } from '@/modules/auth/guards/sessionAuthentication';
 
 const Profile: React.FC = () => {
 
-    const { user } = authHook();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!user) {
-            navigate(-1);
-        }
-    }, [user])
-
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const session = SessionAuthentication.getSession();
 
-    const { data } = useQuery({
-        queryKey: ['user'],
-        queryFn: () => getUserByIdAPI(user!.id),
-        enabled: !!user?.id
-    })
+    const { data, isPending } = useGetUserById(session?.authUser!.employeeId);
 
+    if (isPending) {
+        return <Loader />;
+    }
+
+    console.log(data);
 
     return (
         <div className="w-full max-h-screen bg-gray-50 py-8 px-4">
@@ -44,7 +38,7 @@ const Profile: React.FC = () => {
                     <div className="w-full max-h-screen bg-linear-to-r from-blue-500 to-purple-600 px-8 py-12 text-center">
                         <div className="w-32 h-32 mx-auto rounded-full border-4 border-white bg-white overflow-hidden">
                             <img
-                                src={`https://localhost:7287${user?.imagePath}`}
+                                src={`https://localhost:7287${data?.data[0].imagePath}`}
                                 alt="Profile"
                                 className="w-full h-full object-cover"
                             />
@@ -115,7 +109,7 @@ const Profile: React.FC = () => {
 
             {isModalOpen && (
                 <UpdateProfileModal
-                    data={data?.data?.[0]}
+                    data={data?.data[0]}
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                 />

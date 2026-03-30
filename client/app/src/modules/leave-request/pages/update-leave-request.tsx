@@ -1,37 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authHook } from "../../../store/authStore";
-import { getAllLeaveRequestAPI } from "../../../services/leaveRequestService";
+import { useState } from "react";
 import UpdateLeaveRequestForm from "../components/update-leave-request-form";
 import Icon from "../../../components/icon";
 import { Loader } from "lucide-react";
 import UpdateLeaveRequestListTable from "../components/update-leave-request-list-table";
+import { useGetAllLeaveRequests } from "../apis/queries";
 
 const UpdateLeaveRequest = () => {
 
-  const { user } = authHook();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user || user.role !== 'Admin') {
-      navigate(-1);
+  const { data, isPending } = useGetAllLeaveRequests();
+
+  const getContent = () => {
+    if (isPending) {
+      return (<Loader />)
+    } else if (data?.data?.length > 0) {
+      return (
+        <UpdateLeaveRequestListTable data={data} />
+      )
     }
-  }, [user])
-
-
-  const [appAndLeaveId, setAppAndLeaveId] = useState({
-    leaveRequestId: 0,
-    reviewedById: 0,
-  });
-
-  const [leave, setLeave] = useState<any[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-
-  const { data, isPending } = useQuery({
-    queryKey: ["leaves"],
-    queryFn: getAllLeaveRequestAPI,
-  });
+  }
 
   return (
     <>
@@ -58,11 +45,7 @@ const UpdateLeaveRequest = () => {
             </div>
           </div>
 
-          {openModal && (
-            <UpdateLeaveRequestForm leave={leave} appAndLeaveId={appAndLeaveId} setOpenModal={() => setOpenModal(false)} />
-          )}
-
-          <UpdateLeaveRequestListTable data={data} setAppAndLeaveId={setAppAndLeaveId} setLeave={setLeave} setOpenModal={setOpenModal} />
+          {getContent()}
         </div>
       </div>
     </>
